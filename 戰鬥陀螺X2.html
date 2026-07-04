@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-HK">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>極限戰場：戰鬥陀螺結構剖析與新手全攻略</title>
+    <!-- Font Awesome 6 (免費圖標庫) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ----- 全域重置與字型 ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 20%, #0b0f19 0%, #030407 100%);
+            color: #f1f5f9;
+            padding: 50px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ----- 頁首 + 圖片橫幅 ----- */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(79, 172, 254, 0.2);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        header .sub-head {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        /* ---- 圖片橫幅 ---- */
+        .banner-img {
+            width: 100%;
+            height: auto;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 20px;
+            border: 1px solid #1e293b;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            display: block;
+            margin: 0 auto 6px;
+        }
+        .banner-img:hover {
+            transform: scale(1.008);
+            box-shadow: 0 20px 50px rgba(0, 242, 254, 0.15);
+        }
+        .banner-caption {
+            font-size: 0.85rem;
+            color: #475569;
+            text-align: right;
+            padding-right: 8px;
+            margin-top: 4px;
+        }
+
+        /* ----- 區塊標題 ----- */
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #38bdf8;
+            border-left: 5px solid #ff3366;
+            padding-left: 15px;
+            align-self: flex-start;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        /* ----- 模組一：結構剖析 (含圖片) ----- */
+        .structure-container {
+            display: flex;
+            max-width: 1100px;
+            width: 100%;
+            gap: 40px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #1e293b;
+            padding: 35px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            margin-bottom: 60px;
+        }
+
+        .visual-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        canvas {
+            background: radial-gradient(circle, rgba(30, 41, 59, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            display: block;
+        }
+
+        /* 實物參考圖 (在 canvas 下方) */
+        .ref-img-wrapper {
+            width: 100%;
+            max-width: 380px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+            background: #0f172a;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .ref-img-wrapper:hover {
+            transform: translateY(-4px);
+            border-color: #4facfe;
+        }
+        .ref-img-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .ref-img-wrapper .img-label {
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            background: #111827;
+            border-top: 1px solid #1e293b;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .ref-img-wrapper .img-label i {
+            color: #00f2fe;
+            margin-right: 6px;
+        }
+
+        .info-panel {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .part-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .part-card:hover,
+        .part-card.active {
+            background: #1e1b4b;
+            border-color: #ff3366;
+            transform: translateX(10px);
+        }
+        .part-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 6px;
+            color: #f8fafc;
+        }
+        .part-card h3 span {
+            font-size: 0.8rem;
+            background: #ff3366;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        .part-card p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        /* ----- 模組二：新手入坑 (含圖標 + 圖片) ----- */
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .guide-card {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            padding: 25px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .guide-card:hover {
+            transform: translateY(-8px);
+            border-color: #00f2fe;
+            box-shadow: 0 15px 30px rgba(0, 242, 254, 0.1);
+        }
+
+        .guide-card .guide-icon {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+            color: #00f2fe;
+        }
+        .guide-card h4 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #f1f5f9;
+        }
+        .guide-card p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            flex: 1;
+        }
+        .guide-card .guide-tag {
+            display: inline-block;
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #00f2fe;
+            font-weight: 600;
+        }
+
+        /* 卡片底部小圖 (裝飾) */
+        .guide-card .card-footer-img {
+            margin-top: 14px;
+            width: 100%;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #1e293b;
+            transition: opacity 0.3s ease;
+        }
+        .guide-card:hover .card-footer-img {
+            opacity: 0.9;
+        }
+
+        /* ----- 響應式 ----- */
+        @media (max-width: 850px) {
+            .structure-container {
+                flex-direction: column;
+            }
+            .part-card:hover,
+            .part-card.active {
+                transform: translateY(-5px);
+            }
+            header h1 {
+                font-size: 2.2rem;
+            }
+            .banner-img {
+                max-height: 160px;
+            }
+            .ref-img-wrapper {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 30px 12px;
+            }
+            header h1 {
+                font-size: 1.7rem;
+            }
+            .section-title {
+                font-size: 1.4rem;
+            }
+            .guide-card .card-footer-img {
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====== 頁首 + 圖片橫幅 ====== -->
+    <header>
+        <!-- 戰鬥陀螺 X 主題圖片橫幅 -->
+        <img
+        class="banner-img"
+        src="https://picsum.photos/seed/beybladeX/1200/400"
+        alt="戰鬥陀螺 X 競技場概念圖"
+        loading="lazy"
+        />
+        <p class="banner-caption">
+            <i class="fa-regular fa-image"></i> 示意圖 · 戰鬥陀螺 X 極限加速戰場
+        </p>
+
+        <h1>⚡ 戰鬥陀螺 X 終極戰術庫</h1>
+        <p class="sub-head">
+            <i class="fa-solid fa-bolt" style="color:#fbbf24;margin-right:6px;"></i>
+            探索第四世代極限加速物理機制，最佳入坑裝備
+        </p>
+    </header>
+
+    <!-- ====== 主題一：結構剖析 ====== -->
+    <h2 class="section-title">
+        <i class="fa-solid fa-cubes" style="margin-right:12px;color:#ff3366;"></i>
+        01 / 三層核心結構拆解
+    </h2>
+    <div class="structure-container">
+        <!-- 左側視覺區：Canvas + 實物參考圖 -->
+        <div class="visual-panel">
+            <canvas id="gyroCanvas" width="380" height="380"></canvas>
+
+            <!-- 實物參考圖 (新增) -->
+            <div class="ref-img-wrapper">
+                <img
+                src="https://picsum.photos/seed/beybladeParts/600/300"
+                alt="戰鬥陀螺 X 零件實物參考圖"
+                loading="lazy"
+                />
+                <div class="img-label">
+                    <i class="fa-regular fa-compass"></i> 戰鬥陀螺 X 零件示意 · 戰刃 / 輪盤 / 軸心
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側資訊卡 -->
+        <div class="info-panel">
+            <div class="part-card active" data-part="blade">
+                <h3><span>BLADE</span> 戰刃（金屬打擊層）</h3>
+                <p>陀螺最外圈的重裝锌合金部位。將前幾代的結晶盤與金屬環融為一體，專門負責承受與發動高強度的金屬碰撞。其不對稱形狀直接決定是攻擊型、防禦型或持久型。</p>
+            </div>
+            <div class="part-card" data-part="ratchet">
+                <h3><span>RATCHET</span> 固鎖輪盤（高度與抗爆控制）</h3>
+                <p>中層的塑料改裝扣件。其外露的突起邊角被對手精準撞擊時，會觸發爆裂機制。玩家通常透過更換不同高度與刃數（如 3-60、5-80）的輪盤來調整陀螺的重心。</p>
+            </div>
+            <div class="part-card" data-part="bit">
+                <h3><span>BIT</span> 軸心陀尖（極限加速齒輪）</h3>
+                <p>底部的物理軸芯。其軸突外圍帶有特殊齒輪，當陀螺位移到對戰盤邊緣時，齒輪會與對戰盤上的加速軌道精準咬合，瞬間爆發出超越前幾代數倍的「極限加速 (X-Dash)」。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 主題二：新手入坑 (加入 Font Awesome 圖標 + 卡片底部圖片) ====== -->
+    <h2 class="section-title">
+        <i class="fa-solid fa-rocket" style="margin-right:12px;color:#fbbf24;"></i>
+        02 / 新手零盲點入坑指南
+    </h2>
+    <div class="guide-grid">
+
+        <!-- 卡片 1 -->
+        <div class="guide-card">
+            <div class="guide-icon"><i class="fa-solid fa-stadium"></i></div>
+            <h4>第一步：必備專用戰鬥盤</h4>
+            <p>戰鬥陀螺 X 必須在擁有<strong>外圈齒輪加速軌道</strong>的專用競技場（如 UX-04 或 BX-10 戰鬥盤）中對決。傳統的平滑舊戰鬥盤無法觸發靈魂機制「極限加速」。</p>
+            <span class="guide-tag"><i class="fa-regular fa-circle-check"></i> # 齒輪咬合核心</span>
+            <img
+            class="card-footer-img"
+            src="https://picsum.photos/seed/stadium/600/200"
+            alt="戰鬥盤示意圖"
+            loading="lazy"
+            />
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="guide-card">
+            <div class="guide-icon"><i class="fa-solid fa-sword"></i></div>
+            <h4>第二步：首選入門套組 (Starter)</h4>
+            <p>強烈建議直接購買包含<strong>發射器 + 陀螺</strong>的 Starter 組合。例如具有極高容錯率與穩定性能的「UX-01 蒼龍（Dran Buster）」或全能百搭的經典款式，能迅速建立手感。</p>
+            <span class="guide-tag"><i class="fa-regular fa-circle-check"></i> # 性價比最高</span>
+            <img
+            class="card-footer-img"
+            src="https://picsum.photos/seed/starter/600/200"
+            alt="入門套組示意圖"
+            loading="lazy"
+            />
+        </div>
+
+        <!-- 卡片 3 -->
+        <div class="guide-card">
+            <div class="guide-icon"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+            <h4>第三步：升級拉線/拉帶發射器</h4>
+            <p>標配的簡易小型發射器力量較弱。入坑後建議加購<strong>寬幅拉帶發射器（String Launcher）</strong>或強力齒條發射器，能提供更穩定的高 RPM 初速，讓陀螺展現真正實力。</p>
+            <span class="guide-tag"><i class="fa-regular fa-circle-check"></i> # 轉速決定勝負</span>
+            <img
+            class="card-footer-img"
+            src="https://picsum.photos/seed/launcher/600/200"
+            alt="發射器示意圖"
+            loading="lazy"
+            />
+        </div>
+
+        <!-- 卡片 4 -->
+        <div class="guide-card">
+            <div class="guide-icon"><i class="fa-solid fa-arrows-spin"></i></div>
+            <h4>第四步：理解四大屬性克制</h4>
+            <p>陀螺分為：<strong>攻擊（暴走對撞）、防禦（穩守中心）、持久（高續航自轉）、平衡（結合雙重優勢）</strong>。新手在挑選第二顆陀螺時，建議選擇與第一顆不同屬性的款式進行對改。</p>
+            <span class="guide-tag"><i class="fa-regular fa-circle-check"></i> # 戰術改裝邏輯</span>
+            <img
+            class="card-footer-img"
+            src="https://picsum.photos/seed/types/600/200"
+            alt="屬性克制示意圖"
+            loading="lazy"
+            />
+        </div>
+
+    </div>
+
+    <!-- ====== JavaScript (原有 Canvas 繪製 + 卡片互動) ====== -->
+    <script>
+        const canvas = document.getElementById('gyroCanvas');
+        const ctx = canvas.getContext('2d');
+        const cards = document.querySelectorAll('.part-card');
+
+        let activePart = 'blade';
+        let angle = 0;
+
+        cards.forEach(card => {
+            const updateState = () => {
+                cards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                activePart = card.getAttribute('data-part');
+            };
+            card.addEventListener('mouseenter', updateState);
+            card.addEventListener('click', updateState);
+        });
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // 當選中 Bit（齒輪咬合）時加速自轉
+            angle += (activePart === 'bit') ? 0.06 : 0.015;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+
+            // ---- 1. 底層: BIT 齒輪 ----
+            const isBit = activePart === 'bit';
+            ctx.save();
+            ctx.shadowBlur = isBit ? 25 : 0;
+            ctx.shadowColor = '#00f2fe';
+            ctx.fillStyle = isBit ? '#00f2fe' : '#334155';
+            const teeth = 12;
+            ctx.beginPath();
+            for (let i = 0; i < teeth * 2; i++) {
+                let r = (i % 2 === 0) ? 130 : 115;
+                let a = (Math.PI * 2 / (teeth * 2)) * i;
+                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // ---- 2. 中層: RATCHET 輪盤 ----
+            const isRatchet = activePart === 'ratchet';
+            ctx.save();
+            ctx.shadowBlur = isRatchet ? 25 : 0;
+            ctx.shadowColor = '#ff3366';
+            ctx.fillStyle = isRatchet ? '#ff3366' : '#1e293b';
+            ctx.beginPath();
+            for (let i = 0; i < 3; i++) {
+                ctx.rotate((Math.PI * 2) / 3);
+                ctx.lineTo(0, -100);
+                ctx.lineTo(40, -65);
+                ctx.lineTo(20, -40);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // ---- 3. 頂層: BLADE 金屬戰刃 ----
+            const isBlade = activePart === 'blade';
+            ctx.save();
+            ctx.shadowBlur = isBlade ? 30 : 0;
+            ctx.shadowColor = '#fbbf24';
+            ctx.fillStyle = isBlade ? '#fbbf24' : '#64748b';
+            ctx.beginPath();
+            for (let i = 0; i < 2; i++) {
+                ctx.rotate(Math.PI);
+                ctx.moveTo(0, -80);
+                ctx.quadraticCurveTo(60, -75, 75, -20);
+                ctx.lineTo(30, 0);
+                ctx.lineTo(0, -30);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // ---- 4. 核心晶片 (裝飾) ----
+            ctx.save();
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(0,242,254,0.3)';
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#4facfe';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 40, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 晶片內 X 標誌
+            ctx.strokeStyle = '#00f2fe';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-18, -18);
+            ctx.lineTo(18, 18);
+            ctx.moveTo(18, -18);
+            ctx.lineTo(-18, 18);
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        // 動畫循環
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+
+</body>
+</html>
